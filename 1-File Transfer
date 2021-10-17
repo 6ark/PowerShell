@@ -1,0 +1,137 @@
+########################
+# Run as administrator #
+########################
+<#
+.DESCRIPTION
+1. Update the values for $FileServer, $Flight, the contents of your $UpdateSource folder and $ListofComputers text file.
+2. Run script.
+
+    NOTE1: You may need to adjust your execution policy.
+    NOTE2: You may need to enable WinRM service on remote workstation.
+#>
+
+Function Transfer-Updates{
+
+    # This is creating the network connectivity reports on local computer. This should be outside the FOREACH!!!
+    Function Create-Reports{
+    $LocalTemp = "C:\TEMP"
+    $TestLocalTemp = Test-Path $LocalTemp
+    $Connected = "C:\TEMP\Connected.txt"
+    $Disconnected = "C:\TEMP\Disconnected.txt"
+    $Success = "C:\TEMP\Success.txt"
+    $Failure = "C:\TEMP\Failure.txt"
+    $TestReports = Test-Path $Connected, $Disconnected, $Success, $Failure
+
+        If ($TestLocalTemp){
+            New-Item -ItemType "File" -Path $Connected, $Disconnected, $Success, $Failure -Force
+                If($TestReports){
+                    Write-Host -ForegroundColor Green "The reports $Connected, $Disconnected, and $Failure have been created successfully."
+                    Transfer-Updates
+                }
+                Else{
+                    Write-Host -ForegroundColor Red "One or more reports have NOT been created."
+                }
+        }
+        Else{
+            Write-Host -ForegroundColor Yellow "The directory `"$LocalTemp`" does not exist - creating directory..."
+            New-Item -ItemType "Directory" -Path $LocalTEMP -Force
+            Write-Host -ForegroundColor Yellow "The directory `"$LocalTemp`" has been created - creating reports..."
+            Create-Reports
+        }
+    }
+    Create-Reports
+
+    $ListofComputers = (Get-Content "\\$FileServer\Apps\$Flight\Updates\ListofComputers.txt")
+
+    FOREACH ($Computer in $ListofComputers){
+        # This will check if you can ping workstation.
+        Function Test-Connectivity{
+            $TestConnection = Test-Connection -ComputerName $Computer -Count 1 -Delay 1
+            $Connected = "C:\TEMP\Connected.txt"
+            $Disconnected = "C:\TEMP\Disconnected.txt"
+            
+                If ($TestConnection){
+                    Write-Host -ForegroundColor Green "$Computer`: Connection - checking directory..."
+                    Add-Content -Value "$Computer`: Connected" -Path $Connected
+                    Test-RemoteDirectory
+                }
+                Else{           
+                    Write-Host -ForegroundColor Red "$Computer`: No connection"
+                    Add-Content -Value "$Computer`: Disconnected" -Path $Disconnected
+                }
+            }
+    
+        # This will check the remote workstation for the updates folder.
+        Function Test-RemoteDirectory{
+        $TestDirectory = Test-Path "C:\temp\Updates"
+        $UpdatesDestination = "\\$Computer\C$\TEMP\Updates"
+
+            If ($TestDirectory){
+                Write-Host -ForegroundColor Green "The directory exists - transferring files..."
+                Start-Transfer
+            }
+            Else{
+                Write-Host -ForegroundColor Yellow "The directory does not exist - creating directory..."
+                New-Item -ItemType "Directory" -Path $UpdatesDestination -Force
+                Write-Host -ForegroundColor Yellow "The directory has been created - reattempting transfer..."
+                Test-RemoteDirectory
+            }
+        }
+   
+        # This will compress and transfer files.
+        Function Start-Transfer{
+        $FileServer = "[insert file server]"
+        $Flight = "[You can change this part]"
+        $UpdatesSource = "\\$FileServer\Apps\$Flight\Updates\Transfer"
+        $UpdatesDestination = "\\$Computer\C$\TEMP\Updates"
+        $LocalCompressed = "$UpdatesSource\UpdatesSource.zip"
+        $RemoteCompressed = "\\$UpdatesDestination\UpdatesDestination.zip"
+        $TestRemoteCompressed = Test-Path $RemoteCompressed
+        $Failure = "C:\TEMP\Failure.txt"
+
+            Compress-Archive -Path $UpdatesSource -DestinationPath $LocalCompressed
+            ### Invoke???
+            Copy-Item -Path $LocalCompressed -Destination $RemoteCompressed -Force
+                If ($TestRemoteCompressed){
+                    Write-Host -ForegroundColor Green "The updates were successfully sent to $Computer - validating..."
+                    Start-Validation
+                }
+                Else{
+                    Write-Host -ForegroundColor Red "There was an issue sending the files to $Computer."
+                    Add-Content -Value "$Computer`: Failure to receive updates" -Path $Failure
+                }
+        }
+
+        # This will confirm the integrity of your files post transfer.
+        Function Start-Validation{
+        $FileServer = "[insert file server]"
+        $Flight = "[You can change this part]"
+        $UpdatesSource = "\\$FileServer\Apps\$Flight\Updates\Transfer"
+        $UpdatesDestination = "\\$Computer\C$\TEMP\Updates"
+        $LocalCompressed = "$UpdatesSource\UpdatesSource.zip"
+        $RemoteCompressed = "\\$UpdatesDestination\UpdatesDestination.zip"
+        $LocalCompressedHash = Get-FileHash -Path $LocalCompressed -Algorithm SHA256 | Select-Object Hash
+        $RemoteCompressedHash = Get-FileHash -Path $LocalCompressed -Algorithm SHA256 | Select-Object Hash
+        $CompareHash = $LocalCompressedHash -eq $RemoteCompressedHash
+        $Success = "C:\TEMP\Success.txt"
+        $Failure = "C:\TEMP\Failure.txt"
+        
+            If ($CompareHash){
+                Write-Host -ForegroundColor Green "Local:Remote $LocalCompressedHash`:$RemoteCompressedHash - expanding archive..."
+                Expand-Archive -Path $RemoteCompressed
+                Write-Host -ForegroundColor Green "Updates have successfully been transferred to $Computer."
+                Add-Content -Value "$Computer`: Successful transfer." -Path $Success
+            }
+            Else{
+                Write-Host -ForegroundColor Red "Local:Remote $LocalCompressedHash`:$RemoteCompressedHash - removing archive and reattempting..."
+                Remove-Item $RemoteCompressed -Force
+                Add-Content -Value "$Computer`: Local:Remote $LocalCompressedHash`:$RemoteCompressedHash" -Path $Failure
+            }    
+        }
+    
+        Test-Connectivity
+    }
+}
+Start-Transcript
+Transfer-Updates
+Stop-Transcript
