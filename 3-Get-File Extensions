@@ -1,0 +1,59 @@
+Function Get-Extensions{
+    Function Create-Reports{
+    $Directory = "C:\TEMP"
+    $ResultsDirectory = "$Directory\Results"
+    $Results = "$ResultsDirectory\Results.txt"
+
+    $TestDirectory = Test-Path $Directory
+    $TestResultsDirectory = Test-Path $ResultsDirectory
+    $TestResults = Test-Path $Results
+
+        If ($TestDirectory){
+            If ($TestResultsDirectory){                
+                Write-Host -ForegroundColor Green "$Results file exists - getting extensions"
+                New-Item -ItemType "File" -Path $Results -Force                 
+
+                If ($TestResults){                    
+                    Write-Host -ForegroundColor Green "$Results file exists - getting extensions"
+                    Show-Extensions
+                }
+                Else{            
+                    Write-Host -ForegroundColor Yellow "Creating $Results..."
+                    New-Item -ItemType "File" -Path $Results -Force
+                    Write-Host -ForegroundColor Green "$Results was created - reattempting"
+                    Create-Reports
+                }
+            }
+            Else{
+            Write-Host -ForegroundColor Yellow "Creating $ResultsDirectory..."
+            New-Item -ItemType "Directory" -Path $ResultsDirectory
+            Write-Host -ForegroundColor Green "$ResultsDirectory was created - reattempting"
+            Create-Reports
+            }
+        
+        }
+        Else{
+            Write-Host -ForegroundColor Yellow "Creating $Directory..."
+            New-Item -ItemType "Directory" -Path $Directory
+            Write-Host -ForegroundColor Green "$Directory was created - reattempting"
+            Create-Reports        
+        }
+    }
+
+    Function Show-Extensions{
+    Add-Type -Assembly 'System.IO.Compression.FileSystem'
+    $Folder = "\\<fileserver>\Transfer\OUTGOING\Test"
+    $Files = (Get-ChildItem -Path $Folder -Recurse -Attributes !Directory -Force).Extension
+    $ZIPS = (Get-ChildItem -Path $Folder -Recurse -Attributes !Directory -Force).FullName | Where-Object {$_.Contains(".zip")}
+    
+        Add-Content -Value "Uncompressed Extensions;" -Path $Results
+        $Files | Select-Object -Unique | Add-Content -Path $Results       
+        Add-Content -Value "Compressed Extensions;" -Path $Results    
+        Foreach ($ZIP in $ZIPS){    
+            [System.IO.Compression.ZipFile]::OpenRead($ZIP).Entries.Name | Add-Content $Results            
+        }        
+        Start-Process $Results
+    }
+    Create-Reports
+}
+Get-Extensions
