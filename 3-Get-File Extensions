@@ -1,5 +1,22 @@
+<#
+Issues:
+1. The folder browser currently only works once per PowerShell environment. The workaround is to either open a new PowerShell tab (CTRL+T) or restarting PowerShell ISE. I might be able to fix that at work this week.
+2. The variable $FolderSize gives its results in bytes. I can probably fix this at work this week.
+3. The variables $FileCount and $FolderCount do not include the files and folders within compressed files.
+#>
+
 # folder to get a unique list of file extensions from
-$Folder = "C:\Temp\Test"
+Add-Type -AssemblyName System.Windows.Forms
+$browser = New-Object System.Windows.Forms.FolderBrowserDialog
+$null = $browser.ShowDialog()
+$Folder = $browser.SelectedPath
+
+# An alternative is to comment out the folder browser above and manually specify the location of the folder (e.g. $Folder = "C:\Directory\File.Extension" OR $Folder = "\\<Fileserver>\Directory\File.Extension")
+
+# Folder metadata
+$FolderSize = ("{0} Bytes" -f ((Get-ChildItem $Folder -Recurse | Measure-Object -Property Length -Sum -ErrorAction Stop).Sum))
+$FileCount = (Get-ChildItem $Folder -File -Recurse | Measure-Object).Count
+$FolderCount = (Get-ChildItem $Folder -Directory -Recurse | Measure-Object).Count
 
 # Timestamps
 $Date = (Get-Date -UFormat "%d %B %Y")
@@ -78,6 +95,7 @@ if ($TestResultsDirectory -eq 0)
 Write-Host -ForegroundColor Green "$Results file exists - getting extensions"
 New-Item -ItemType "File" -Path $Results -Force
 Add-Content -Value "This script was started by $env:USERNAME on $Date at $Time.
+The folder size is $FolderSize and there are $FileCount file(s) stored within $FolderCount folder(s).
 The hash for $Folder is: $FolderHash
 The extensions are listed below;
 " -Path $Results
