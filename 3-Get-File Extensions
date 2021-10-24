@@ -7,7 +7,7 @@ Function Get-Extensions{
     $TestDirectory = Test-Path $Directory
     $TestResultsDirectory = Test-Path $ResultsDirectory
     $TestResults = Test-Path $Results
-
+    
         If ($TestDirectory){
             If ($TestResultsDirectory){                
                 Write-Host -ForegroundColor Green "$Results file exists - getting extensions"
@@ -30,7 +30,7 @@ Function Get-Extensions{
             Write-Host -ForegroundColor Green "$ResultsDirectory was created - reattempting"
             Create-Reports
             }
-        
+
         }
         Else{
             Write-Host -ForegroundColor Yellow "Creating $Directory..."
@@ -39,18 +39,31 @@ Function Get-Extensions{
             Create-Reports        
         }
     }
+    
+    Function HandleZip ([System.IO.Stream]$Stream) {
+        Add-Type -Assembly 'System.IO.Compression'        
+        $ZipArchive = [System.IO.Compression.ZipArchive]::new($Stream)        
+        $Entries = $ZipArchive.Entries
+        Foreach ($Entry in $Entries) {
+            $Entry.Name | Add-Content $Results
+            
+            If ($Entry.Name.Contains(".zip")) {
+                HandleZip($Entry.Open())
+            }
+        }
+    }
 
     Function Show-Extensions{
-    Add-Type -Assembly 'System.IO.Compression.FileSystem'
-    $Folder = "\\<fileserver>\Transfer\OUTGOING\Test"
-    $Files = (Get-ChildItem -Path $Folder -Recurse -Attributes !Directory -Force).Extension
-    $ZIPS = (Get-ChildItem -Path $Folder -Recurse -Attributes !Directory -Force).FullName | Where-Object {$_.Contains(".zip")}
-    
+        Add-Type -Assembly 'System.IO.Compression.FileSystem'
+        $Folder = "C:\Temp\Test"
+        $Files = (Get-ChildItem -Path $Folder -Recurse -Attributes !Directory -Force).Extension
+        $ZIPS = (Get-ChildItem -Path $Folder -Recurse -Attributes !Directory -Force).FullName | Where-Object {$_.Contains(".zip")}
+
         Add-Content -Value "Uncompressed Extensions;" -Path $Results
         $Files | Select-Object -Unique | Add-Content -Path $Results       
         Add-Content -Value "Compressed Extensions;" -Path $Results    
         Foreach ($ZIP in $ZIPS){    
-            [System.IO.Compression.ZipFile]::OpenRead($ZIP).Entries.Name | Add-Content $Results            
+            HandleZip([System.IO.File]::OpenRead($ZIP))            
         }        
         Start-Process $Results
     }
