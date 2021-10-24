@@ -1,0 +1,89 @@
+# folder to get a unique list of file extensions from
+$Folder = "C:\Temp\Test"
+
+# Timestamps
+$Date = (Get-Date -UFormat "%d %B %Y")
+$Time = (Get-Date -UFormat "%T")
+
+# Hash
+Function Get-FolderHash{
+
+ Get-ChildItem $Folder -Recurse | ?{!$_.psiscontainer} | %{[Byte[]]$contents += [System.IO.File]::ReadAllBytes($_.fullname)}
+
+ $CreateHash = [System.Security.Cryptography.SHA1]::Create()
+
+ [string]::Join("",$($CreateHash.ComputeHash($contents) | %{"{0:x2}" -f $_}))
+
+}
+$FolderHash = Get-FolderHash
+
+# the collections used to maintain a unique list of file extensions
+$extensions = New-Object 'System.Collections.Generic.List[string]'
+$dictionary = New-Object 'System.Collections.Generic.Dictionary[[string],[bool]]'
+
+# a recursive function that loops files in a zip and adds extension to the list if it hasn't been added yet
+Function HandleZip ([System.IO.Stream]$Stream) {
+    Add-Type -AssemblyName 'System.IO.Compression'       
+    $ZipArchive = [System.IO.Compression.ZipArchive]::new($Stream)        
+    $Entries = $ZipArchive.Entries
+    foreach ($Entry in $Entries) 
+    {
+        $extension = [System.IO.Path]::GetExtension($Entry)
+        if (!$dictionary.ContainsKey($extension))
+        {
+            $dictionary.Add($extension, 1)
+            $extensions.Add($extension)
+        }
+        
+        if ($extension -eq ".zip")
+        {
+            HandleZip($Entry.Open())
+        }
+    }
+}
+    
+# loop each file and add the extension to the list if it has not been added yet
+
+foreach ($file in [System.IO.Directory]::EnumerateFiles($Folder, "*.*", "AllDirectories"))
+{
+    $extension = [System.IO.Path]::GetExtension($file)
+    if (!$dictionary.ContainsKey($extension))
+    {
+        $dictionary.Add($extension, 1)
+        $extensions.Add($extension)
+    }
+    
+    if ($extension -eq ".zip")
+    {
+        HandleZip([System.IO.File]::OpenRead($file))  
+    }
+}
+
+$Directory = "C:\TEMP"
+$ResultsDirectory = "$Directory\Results"
+$Results = "$ResultsDirectory\Results.txt"
+
+$TestResultsDirectory = Test-Path $ResultsDirectory
+$TestResults = Test-Path $Results
+
+# create the results directory if it does not exist
+if ($TestResultsDirectory -eq 0)
+{
+    Write-Host -ForegroundColor Yellow "Creating $ResultsDirectory..."
+    New-Item -ItemType "Directory" -Path $ResultsDirectory -Force
+    Write-Host -ForegroundColor Green "$ResultsDirectory was created - reattempting"
+}
+
+# create / recreate the file
+Write-Host -ForegroundColor Green "$Results file exists - getting extensions"
+New-Item -ItemType "File" -Path $Results -Force
+Add-Content -Value "This script was started by $env:USERNAME on $Date at $Time.
+The hash for $Folder is: $FolderHash
+The extensions are listed below;
+" -Path $Results
+
+# add the list of unique extensions to the result file
+$extensions | Add-Content -Path $Results  
+
+# show the result file
+Start-Process $Results
