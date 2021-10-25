@@ -1,9 +1,16 @@
-https://www.reddit.com/r/PowerShell/comments/qfh6k4/i_need_a_script_to_open_every_image_in_a_folder/
+# https://www.reddit.com/r/PowerShell/comments/qfh6k4/i_need_a_script_to_open_every_image_in_a_folder/
+# This is almost done, I have to get it to open the images too but I have to go back to work.
 
 # Declare variables
 $Transcript = "C:\Transcripts\_Transcript.txt"
+
+$Extensions = ("*.jpg", "*.png")
+$Pictures = (Get-ChildItem -Path $Source -Recurse -Include $Extensions).FullName
+$Album =  (Get-Content ($Pictures))
+
 $Source = "C:\temp"
 $Destination = "C:\temp2"
+
 
 # This will create a directory that you will store the copied images. The -Force parameter will recreate the directory so don't select the source directory.
 New-Item -ItemType "Directory" -Path $Destination -Force
@@ -12,13 +19,13 @@ New-Item -ItemType "Directory" -Path $Destination -Force
 Start-Transcript -Path $Transcript -Force
 
 # Identify which files 
-Get-ChildItem -Path $Source -Recurse -Include "*.jpg", "*.png"
+$Pictures
 
 # Open each file
-Get-ChildItem -Path $Source -Recurse -Include "*.jpg", "*.png" | Start-Process
+ForEach($Image in $Album){ Out-String | Start-Process}
 
 # Save a copy of the file to a directory
-Get-ChildItem -Path $Source -Recurse -Include "*.jpg", "*.png" | Copy-Item -Destination $Destination -Force
+$Pictures | Copy-Item -Destination $Destination -Force
 
 # View results
 Get-ChildItem -Path $Destination -Recurse
