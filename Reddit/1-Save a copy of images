@@ -1,14 +1,16 @@
-# https://www.reddit.com/r/PowerShell/comments/qfh6k4/i_need_a_script_to_open_every_image_in_a_folder/
-# This is almost done, I have to get it to open the images too but I have to go back to work.
+<# 
+URL: https://www.reddit.com/r/PowerShell/comments/qfh6k4/i_need_a_script_to_open_every_image_in_a_folder/
+
+Description: User wants to open each image within a directory then save them with the same extension.
+#>
 
 # Declare variables
 $Transcript = "C:\Transcripts\_Transcript.txt"
 
+$Source = "C:\temp"
 $Extensions = ("*.jpg", "*.png")
 $Pictures = (Get-ChildItem -Path $Source -Recurse -Include $Extensions).FullName
-$Album =  (Get-Content ($Pictures))
 
-$Source = "C:\temp"
 $Destination = "C:\temp2"
 
 
@@ -22,7 +24,7 @@ Start-Transcript -Path $Transcript -Force
 $Pictures
 
 # Open each file
-ForEach($Image in $Album){ Out-String | Start-Process}
+$Pictures | Invoke-Item
 
 # Save a copy of the file to a directory
 $Pictures | Copy-Item -Destination $Destination -Force
