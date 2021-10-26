@@ -54,7 +54,7 @@ Function Get-Installed_Software{
                         }
                     }
                     $Array | Select-Object "Computer", "DisplayName", "VersionMajor" | Sort-Object -Property DisplayName -Descending
-                } | Export-Csv $Report -NoTypeInformation -Append
+                } | Select-Object * -ExcludeProperty PSSession, Runtime #### I'm not at work right now but you can omit those colums with exclude property | Export-Csv $Report -NoTypeInformation -Append
             }
             Else{
                 Write-Host -ForegroundColor Red "Failed connection to $Computer."
