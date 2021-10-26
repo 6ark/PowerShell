@@ -47,15 +47,14 @@ Function Get-Installed_Software{
                 Invoke-Command -ComputerName $Computer -ScriptBlock {
                     $Array = @()
                     $Installed_Software = (Get-ItemProperty -Path "HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*", "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*")
-                    $Report = "<\\Directory\File.csv>"
 
                     Foreach($Software in $Installed_Software){
                         If ($Software.DisplayName -ne "" -and $Software.DisplayName -notcontains "Update for" -and $Software.VersionMajor -ge "0"){
                             $Array += New-Object psobject -Property @{"Computer" = $env:COMPUTERNAME; "DisplayName" = $Software.DisplayName; "VersionMajor" = $Software.VersionMajor}
                         }
                     }
-                    $Array | Select-Object "Computer", "DisplayName", "VersionMajor" | Sort-Object -Property DisplayName -Descending | Export-Csv $Report -NoTypeInformation -Append
-                }
+                    $Array | Select-Object "Computer", "DisplayName", "VersionMajor" | Sort-Object -Property DisplayName -Descending
+                } | Export-Csv $Report -NoTypeInformation -Append
             }
             Else{
                 Write-Host -ForegroundColor Red "Failed connection to $Computer."
