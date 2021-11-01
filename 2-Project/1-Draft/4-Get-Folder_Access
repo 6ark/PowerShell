@@ -1,0 +1,41 @@
+<#
+.DESCRIPTION
+This purpose of this script is to recursively search a specified directory and provide a list of all the directories that have a user/group listed in the directories ACL.
+An example of what this could be used for is removing SIDs from folders.
+.Remarks
+I was able to get it to function in both attempts occasionally but it wouldn't search for SIDs or specific users (EDIPI). 
+Attempt1: I think the issue is with the Where-Object {$_.IdentityReference -contains $ID}
+Attempt2: I think the issue is with the "$ACL.IdentityReference -contains $ID"
+#>
+Add-Type -AssemblyName System.Windows.Forms
+$Browser = New-Object System.Windows.Forms.FolderBrowserDialog
+$Null = $Browser.ShowDialog()
+$Directory = $Browser.SelectedPath
+$ID = "[Filter]"
+$Report = "C:\Temp\Permissions.csv"
+
+<# Attempt 1
+New-Item -ItemType "File" -Path $Report -Force
+Get-ChildItem -Path $Directory -Directory -Recurse | ForEach-Object { 
+    $ACL = (Get-Acl -Path $_.FullName).Access | Where-Object {$_.IdentityReference -contains $ID}
+    
+    If ($ACL.IdentityReference){ 
+        Add-Content -Path $Report -Value $_.FullName
+    }
+} 
+
+Start-Process $Report
+#>
+
+<# Attempt 2
+New-Item -ItemType "File" -Path $Report -Force
+Get-ChildItem -Path $Directory -Directory -Recurse | ForEach-Object { 
+    $ACL = (Get-Acl -Path $_.FullName).Access
+    
+    If ($ACL.IdentityReference -contains $ID){ 
+        Add-Content -Path $Report -Value $_.FullName
+    }
+} 
+
+Start-Process $Report
+#>
