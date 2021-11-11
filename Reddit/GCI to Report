@@ -1,0 +1,44 @@
+<#
+This is in response to a question posted by SemiEvilMonkey on 10 November 2021. The URL is; https://www.reddit.com/r/PowerShell/comments/qqybmp/folder_file_list/
+
+You can export the contents to a CSV to make it easier to manipulate the data by removing the comment ("#") from the alias $CSV and the last two lines. You might also choose to comment out (add "#") the 4/5th lines from the bottom and the alias $Website. 
+#>
+
+$Path = "C:\temp3\"
+$Array1 = @()
+#$CSV = "c:\temp3\array.csv"
+$Website = "c:\temp3\website.html"
+
+(Get-ChildItem -Path $Path -Directory -Recurse -Force).FullName | ForEach-Object {
+
+    $Array1 += New-Object psobject -Property @{ "Directory" =  $_ }
+    
+        (Get-ChildItem $_ -Recurse -Force).FullName | ForEach-Object {
+    
+            $Array1 += New-Object psobject -Property @{ "Filename" = (Get-ChildItem $_).Name; "File Size" = `
+                If ((Get-Item $_).Length -ge 1TB){
+                    [string]::Format::("{0:0.00} TB", (Get-Item $_).Length / 1TB)
+                } 
+                Elseif ((Get-Item $_).Length -ge 1GB){
+                    [string]::Format("{0:0.00} GB", (Get-Item $_).Length / 1GB)
+                }
+                Elseif ((Get-Item $_).Length -ge 1MB){
+                    [string]::Format("{0:0.00} MB", (Get-Item $_).Length / 1MB)
+                }
+                Elseif ((Get-Item $_).Length -ge 1KB){
+                    [string]::Format("{0:0.00} KB", (Get-Item $_).Length / 1KB)
+                }
+                Elseif ((Get-Item $_).Length -ge 0){
+                    [string]::Format("{0:0.00} B", (Get-Item $_).Length)
+                }
+                Else {
+                    Write-Output "The file doesn't exist."
+                }
+            }   
+        }                     
+}
+$Array1 | Select-Object "Directory", "Filename", "File Size" -ExcludeProperty PSComputerName, RunspaceID, PSShowComputerName | ConvertTo-Html -Fragment | Out-File -FilePath $Website
+Start-Process $Website
+
+#$Array1 | Select-Object "Directory", "Filename", "File Size" -ExcludeProperty PSComputerName, RunspaceID, PSShowComputerName | Export-Csv $CSV -NoTypeInformation -Force
+#Start-Process $CSV
