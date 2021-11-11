@@ -1,0 +1,21 @@
+<#
+This is in response to a question posted by u/dantignac on reddit at https://www.reddit.com/r/PowerShell/comments/qrrl46/advice_for_script_snippet/
+#>
+
+$Computers = (Get-Content -Path "C:\[directory]\Computers.txt")
+$File = "C:\[directory]\[file].[extension]"
+$Array1 = @()
+$Report = "C:\[directory]\[file].csv"
+
+New-Item -ItemType "File" -Path $Report -Force
+
+Foreach ($Computer in $Computers){ 
+    $Array1 += New-Object PSObject -Property @{
+        "Computer" = $Computer;
+        "Connection" = $( If(Test-Connection -ComputerName $Computer -Count 1){Write-Output "Success"}Else{Write-Output "Failure"} );
+        "Test File" = $( Invoke-Command -ComputerName $Computer -ScriptBlock { If(Test-Path $File){Write-Output "True"}Else{Write-Output "False"} } )
+    }
+$Array1 | Select-Object "Computer", "Connection", "Test File" -ExcludeProperty PSComputerName, RunspaceId, PSShowComputerName | Export-Csv $Report -NoTypeInformation -Append
+}
+
+Start-Process $Report
