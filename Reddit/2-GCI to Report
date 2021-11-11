@@ -9,11 +9,11 @@ $Array1 = @()
 #$CSV = "c:\temp3\array.csv"
 $Website = "c:\temp3\website.html"
 
-(Get-ChildItem -Path $Path -Directory -Recurse -Force).FullName | ForEach-Object {
+(Get-ChildItem -Path $Path -Recurse -Force).Directory.FullName | Select-Object -Unique | ForEach-Object {
 
     $Array1 += New-Object psobject -Property @{ "Directory" =  $_ }
     
-        (Get-ChildItem $_ -Recurse -Force).FullName | ForEach-Object {
+        (Get-ChildItem $_ -File -Force).FullName | ForEach-Object {
     
             $Array1 += New-Object psobject -Property @{ "Filename" = (Get-ChildItem $_).Name; "File Size" = `
                 If ((Get-Item $_).Length -ge 1TB){
