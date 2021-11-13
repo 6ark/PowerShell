@@ -1,0 +1,41 @@
+# NOTE: This was written in one sitting using fundamentals that I've familiarized myself with, but I have not tested this function yet.
+
+Function Search_Computers{
+    <#
+    .Description
+    You will need to specify the literal path of the text files for $Computers and $Files. 
+
+    You will need to add computer name(s) on seperate lines in $Computers.
+    Example: Desktop1
+
+    You will need to add literal file path(s) on seperate lines in $Files.
+    Example: $env:ComputerName\C$\[directory]\[file].[extension]
+    DO NOT REMOVE "$env:ComputerName" but you can change the drive letter (e.g. \D$\ )
+    #>
+
+    #Computer(s) to check
+    $Computers = Get-Content -Path "C:\[directory]\Computers.txt"
+
+    #File(s) to check
+    $Files = Get-Content -Path "C:\[directory]\Files.txt"
+
+    #Location of report
+    $Report = "C:\[directory]\[file].csv"
+
+    #Testing connections
+    $Test_Connection = If (Test-Connection -ComputerName $env:ComputerName -Count 1){Write-Output "Success: $env:ComputerName"}Else{Write-Output "Failure: $env:ComputerName"}
+    $Test_File = $Files | Foreach-Object { If (Test-Path){Write-Output "Success: $_.FullName"}Else{Write-Output "Failure: $_.FullName"} }
+
+    #Array
+    $Array1 = @()
+    $AddResult = $Array1 += New-Object PSObject-Property @{ "Computer" = $env:ComputerName; "Connection" = $Test_Connection; "File" = $Test_File }
+
+    Start-Transcript
+    New-Item -ItemType "File" -Path $Report -Force
+    $Computers | Foreach-Object { $AddResult }
+    $Array1 | Select-Object "Computer", "Connection", "File" -ExcludeProperty PSComputerName, RunspaceId, PSShowComputerName | Export-Csv $Report -NoTypeInformation -Force
+    Start-Process $Report
+    Stop-Transcript
+    }
+
+Search_Computers
