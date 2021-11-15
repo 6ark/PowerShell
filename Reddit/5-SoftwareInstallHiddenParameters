@@ -1,0 +1,51 @@
+<# 
+.Description
+This was written in an attempt to find hidden CLI arguments that could be used to remotely install software unattended. This is in the situation that the software developer does not provide good documentation, prompts, is out of business, or doesn't respond to requests.
+
+The first post was on stackoverflow and was closed because the moderators of the page marked it as needing more information, without asking what information they needed. It has almost everything that I've done so I'm sure there is enough information in the ticket. You can find it here;
+https://stackoverflow.com/questions/69965494/how-do-i-find-hidden-command-line-arguments-for-software-installation
+
+The second post was on reddit you can find it here;
+https://www.reddit.com/r/sysadmin/comments/qtwems/how_do_i_find_hidden_command_line_arguments_for/
+
+#>
+Function Get-Strings{
+<# 
+This came from a twitter post by SwiftOnSecurity but I converted it to PowerShell and then lost the script so I'll rewrite it later. I also did it in process explorer instead of strings.
+It is run in administrative command prompt.
+
+::extract strings from program
+strings.exe program >> strings.txt
+:: run each string as program argument
+for /f %a IN (strings.txt) DO "program.exe" %a
+#> 
+}
+
+Function Check-Parameters{
+  $Strings = Get-Content "C:\temp\strings\strings.txt"
+  $Application = "C:\Users\prfec\Downloads\vlc-3.0.14-win64.exe"
+  $Results = "C:\temp\strings\results.txt"
+
+  cls
+  New-Item -ItemType "File" -Path $Results -Force
+
+  Foreach ($String in $Strings){
+      Start-Sleep -Seconds 4
+      Write-Host -ForegroundColor DarkYellow "Currently attempting parameter: $String"
+      Start-Process -FilePath $Application -ArgumentList "`"/$("$String")`""
+
+      If ((Get-Process -Name vlc-3.0.14-win64).Name){
+          Start-Sleep -Seconds 2
+          (Stop-Process -Name vlc-3.0.14-win64).Name
+          Write-Host -ForegroundColor Green "$String : is a successful parameter."
+          Write-Output "Success: $String" | Out-File $Results -Append
+      }
+      Else{
+          Write-Host -ForegroundColor Red "$String : is not a successful parameter."
+          Write-Output "Failure: $String" | Out-File $Results -Append
+      }
+  }
+
+  Start-Process $Results
+}
+Check-Parameters
