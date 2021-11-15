@@ -13,6 +13,6 @@ $StartMenu = "C:\ProgramData\Microsoft\Windows\Start Menu\Programs"
 $Directories = (Get-ChildItem -Path $StartMenu -Directory -Force).FullName
 $Directories | ForEach-Object {
     If ((Get-ChildItem -Path "$_" -Recurse -Force | Measure-Object).Count -le "3"){
-        (Get-ChildItem "$_" -Recurse -Force).FullName | Copy-Item -Destination $StartMenu -Force -WhatIf
+        (Get-ChildItem "$_" -Recurse -Force).FullName | Copy-Item -Destination $StartMenu -Force
     }
 }
