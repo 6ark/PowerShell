@@ -1,0 +1,18 @@
+<# 
+u/BlueWizard3 requested a method to move folders in the start menu folder to reduce number of clicks to access applications. The post is located here; https://www.reddit.com/r/techsupport/comments/qu1uv9/is_there_a_way_to_remove_items_from_their_folders/
+
+Usage:
+1. Open PowerShell ISE as an administrator
+2. Select "Show Script Pane Maximized"
+3. Select "Show Script Pane Top"
+4. Copy script into script pane (white)
+5. Press "Play" - the rotated green arrow
+#>
+
+$StartMenu = "C:\ProgramData\Microsoft\Windows\Start Menu\Programs"
+$Directories = (Get-ChildItem -Path $StartMenu -Directory -Force).FullName
+$Directories | ForEach-Object {
+    If ((Get-ChildItem -Path "$_" -Recurse -Force | Measure-Object).Count -le "3"){
+        (Get-ChildItem "$_" -Recurse -Force).FullName | Copy-Item -Destination $StartMenu -Force -WhatIf
+    }
+}
