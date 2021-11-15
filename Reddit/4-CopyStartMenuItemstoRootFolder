@@ -12,7 +12,9 @@ Usage:
 $StartMenu = "C:\ProgramData\Microsoft\Windows\Start Menu\Programs"
 $Directories = (Get-ChildItem -Path $StartMenu -Directory -Force).FullName
 $Directories | ForEach-Object {
-    If ((Get-ChildItem -Path "$_" -Recurse -Force | Measure-Object).Count -le "3"){
-        (Get-ChildItem "$_" -Recurse -Force).FullName | Copy-Item -Destination $StartMenu -Force
+    If (((Get-ChildItem -Path "$_" -File -Recurse -Force).FullName | Measure-Object).Count -le "3"){
+        (Get-ChildItem "$_" -File -Recurse -Force).FullName | Copy-Item -Destination $StartMenu -Force
     }
 }
+
+# You might be able to replace the items to the left of the pipe on line 16 with "$_" or replace the everything to the left of Copy-Item and put "$_" directly to the right of Copy-Item. This is untested.
