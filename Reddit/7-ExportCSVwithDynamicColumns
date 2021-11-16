@@ -19,12 +19,6 @@ $Username | ForEach-Object {
     }
 }
 
-$Array1 | ForEach-Object {
-    $Array1 += New-Object PSObject -Property @{
-        "Authphone_$j" = $Authphonevalue
-    }
-}
-
 $Array1 | Select-Object "Username", "Address" -ExcludeProperty PSComputerName, RunspaceId, PSShowComputerName | Export-Csv -Path $Results -NoTypeInformation -Force
 
 #View the contents of array
