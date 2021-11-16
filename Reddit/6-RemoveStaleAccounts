@@ -6,6 +6,11 @@ Reference(s):
 https://adamtheautomator.com/powershell-delete-user-profile/
 https://stackoverflow.com/questions/17829785/delete-files-older-than-15-days-using-powershell
 
+Edit: I forgot to apply a filter to the list of computer names. He can do something like;
+$Computers = Get-Content "C:\temp\computers.txt" | Foreach-Object {$_ | Where-Object -like "*HR*ROD*" }
+NOTE1: I probably used the wrong operator, you can find information on operators here; https://www.educba.com/powershell-operators/?source=leftnav
+NOTE2: You may need to pipe the results of computers after filtering it again to an updated text file (e.g. "C:\temp\computers_updated.txt")
+
 #>
 
 Function Remove_Accounts{
