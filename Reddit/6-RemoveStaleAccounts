@@ -1,0 +1,50 @@
+<# This request was posted by u/smrfnckr on reddit. The link to the post is here; https://www.reddit.com/r/PowerShell/comments/qutw8a/automate_profile_deletion_on_multiple_servers/
+
+If you are using Active Directory you can use Get-ADComputer instead of referencing a text file, like in $Computers. (Guide: https://adamtheautomator.com/get-adcomputer/)
+
+Reference(s):
+https://adamtheautomator.com/powershell-delete-user-profile/
+https://stackoverflow.com/questions/17829785/delete-files-older-than-15-days-using-powershell
+
+#>
+
+
+
+Function Remove_Accounts{
+    $Computers = Get-Content "C:\temp\computers.txt"
+    $Array1 = @()
+    $Results = "C:\temp\results.csv"
+
+    Foreach ($Computer in $Computers){
+        If (Test-Connection $Computer){
+            #Successful connection
+            Function Remove-Old_Accounts{
+            (Get-CimInstance -Computer $Computer  -Class Win32_UserProfile) | Where-Object {$_.LastUseTime -eq (Get-Date).AddDays(-150)} | Remove-CimInstance
+            }
+
+            Write-Host -ForegroundColor Green $_
+            $Array1 += New-Object PsObject -Property @{
+                "Computer" = $Computer;
+                "Connection" = "Success";
+                "Accounts" = (Get-CimInstance -Computer $Computer -Class Win32_UserProfile).LocalPath;
+                "Removed" = Remove-Old_Accounts
+            }
+        }
+        Else{
+            # Unsuccessful connection
+            Write-Host -ForegroundColor Red $_
+            $Array1 += New-Object PsObject -Property @{
+                "Computer" =  -Computer $Computer;
+                "Connection" = "Success";
+                "Accounts" = (Get-CimInstance -Computer $Computer -Class Win32_UserProfile).LocalPath;
+                "Removed" = Remove-Old_Accounts
+            }
+        } 
+
+        $Array1 | Select-Object "Computer","Connection","Accounts", "Removed" -ExcludeProperty PSComputerName, RunspaceId, PSShowComputerName | Export-Csv -Path $Results -NoTypeInformation -Force
+    }
+}
+Start-Transcript
+Remove-Accounts
+Start-Process $Results
+Stop-Transcript
