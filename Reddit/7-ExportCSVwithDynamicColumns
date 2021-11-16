@@ -4,14 +4,20 @@ https://www.reddit.com/r/PowerShell/comments/quxq3y/how_do_i_exportcsv_with_dyna
 IN PROGRESS
 #>
 
+# Create array
 $Array1 = @()
-$Results = "C:\temp\results.csv"
 
+# Set variables
 $Username = for ($i=0; $i -lt 5; $i++){
     "blah$i"
 }
 $Address = "blahblahblah"
+$Results = "C:\temp\results.csv"
 
+# Generate new report
+New-Item -ItemType "File" -Path $Results -Force
+
+# Get Username/Address
 $Username | ForEach-Object {
     $Array1 += New-Object PSObject -Property @{
     "Username" = $_;
@@ -19,7 +25,18 @@ $Username | ForEach-Object {
     }
 }
 
-$Array1 | Select-Object "Username", "Address" -ExcludeProperty PSComputerName, RunspaceId, PSShowComputerName | Export-Csv -Path $Results -NoTypeInformation -Force
+# Get Authphone
+$Array1 | ForEach-Object {
+    $Authphonevalue = Get-Random -InputObject (111111111..111111333)
+
+    For ($j=0; $j -lt (Get-Random -InputObject (1..8)); $j++){
+        $Array1 += New-Object PsObject -Property @{
+            "AuthPhone$($j)" = $AuthPhoneValue
+        }
+    }
+}
+
+$Array1 | Select-Object "Username", "Address", "Authphone$j" -ExcludeProperty PSComputerName, RunspaceId, PSShowComputerName | Export-Csv -Path $Results -NoTypeInformation -Force
 
 #View the contents of array
 $Array1
