@@ -27,12 +27,21 @@ $Username | ForEach-Object {
 
 # Get Authphone
 $Array1 | ForEach-Object {
+    # for each line in array create 1-8 phone numbers then add to array
+    For ($j=0; $j -lt (Get-Random -InputObject (1..8)); $j++){        
     $Authphonevalue = Get-Random -InputObject (111111111..111111333)
-
-    For ($j=0; $j -lt (Get-Random -InputObject (1..8)); $j++){
-        $Array1 += New-Object PsObject -Property @{
-            "AuthPhone$($j)" = $AuthPhoneValue
-        }
+        $Authphonevalue | ForEach-Object {
+            Switch ($j){
+                1 { $Array1 += New-Object PsObject -Property @{"AuthPhone$($j)" = $Authphonevalue} }
+                2 { $Array1 += New-Object PsObject -Property @{"AuthPhone$($j)" = $Authphonevalue} }
+                3 { $Array1 += New-Object PsObject -Property @{"AuthPhone$($j)" = $Authphonevalue} }
+                4 { $Array1 += New-Object PsObject -Property @{"AuthPhone$($j)" = $Authphonevalue} }
+                5 { $Array1 += New-Object PsObject -Property @{"AuthPhone$($j)" = $Authphonevalue} }
+                6 { $Array1 += New-Object PsObject -Property @{"AuthPhone$($j)" = $Authphonevalue} }
+                7 { $Array1 += New-Object PsObject -Property @{"AuthPhone$($j)" = $Authphonevalue} }
+                8 { $Array1 += New-Object PsObject -Property @{"AuthPhone$($j)" = $Authphonevalue} }
+            }
+        }        
     }
 }
 
