@@ -12,14 +12,13 @@ NOTE1: I probably used the wrong operator, you can find information on operators
 NOTE2: You may need to pipe the results of computers after filtering it again to an updated text file (e.g. "C:\temp\computers_updated.txt")
 
 #>
-
 Function Remove_Accounts{
     $Computers = Get-Content "C:\temp\computers.txt"
     $Array1 = @()
     $Results = "C:\temp\results.csv"
 
     Foreach ($Computer in $Computers){
-        If (Test-Connection $Computer){
+        If (Test-Connection $Computer -Count 1){
             #Successful connection
             Function Remove-Old_Accounts{
             (Get-CimInstance -Computer $Computer  -Class Win32_UserProfile) | Where-Object {$_.LastUseTime -eq (Get-Date).AddDays(-150)} | Remove-CimInstance
@@ -38,9 +37,9 @@ Function Remove_Accounts{
             Write-Host -ForegroundColor Red $_
             $Array1 += New-Object PsObject -Property @{
                 "Computer" =  -Computer $Computer;
-                "Connection" = "Success";
-                "Accounts" = (Get-CimInstance -Computer $Computer -Class Win32_UserProfile).LocalPath;
-                "Removed" = Remove-Old_Accounts
+                "Connection" = "Failure";
+                "Accounts" = "Failure";
+                "Removed" = "Failure"
             }
         } 
 
@@ -48,6 +47,6 @@ Function Remove_Accounts{
     }
 }
 Start-Transcript
-Remove-Accounts
+Remove_Accounts
 Start-Process $Results
 Stop-Transcript
