@@ -3,7 +3,6 @@ https://www.reddit.com/r/PowerShell/comments/quxq3y/how_do_i_exportcsv_with_dyna
 
 IN PROGRESS - taking break to sleep
 #>
-
 # Create array
 $Array1 = @()
 
@@ -19,7 +18,7 @@ New-Item -ItemType "File" -Path $Results -Force
 
 Function Get-Authphone{
     For ($j=0; $j -lt (Get-Random -InputObject (1..8)); $j++){
-        (Get-Random -InputObject (111111111..111111333)).ToString()
+        (Get-Random -InputObject (111111111..111111333)).ToString().Split(",") | Sort-Object
     }
 }
 
@@ -28,7 +27,7 @@ $Username | ForEach-Object {
     $Array1 += New-Object PSObject -Property @{
     "Username" = $_;
     "Address" = $Address
-    "Phone" = Get-Authphone | ForEach-Object {$_}
+    "Phone" = Get-Authphone
     }
 }
 
