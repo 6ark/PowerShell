@@ -1,8 +1,9 @@
 <#
 https://www.reddit.com/r/PowerShell/comments/quxq3y/how_do_i_exportcsv_with_dynamic_columns_in_each/
 
-IN PROGRESS - taking break to sleep
+The user requested a method to create columns dynamically - I failed it but this can solve as a successful workaround.
 #>
+
 # Create array
 $Array1 = @()
 
@@ -16,10 +17,11 @@ $Results = "C:\temp\results.csv"
 # Generate new report
 New-Item -ItemType "File" -Path $Results -Force
 
-Function Get-Authphone{
-    For ($j=0; $j -lt (Get-Random -InputObject (1..8)); $j++){
+Function Get-Phones{
+    $Numbers = For ($j=0; $j -lt (Get-Random -InputObject (1..8)); $j++){
         (Get-Random -InputObject (111111111..111111333)).ToString().Split(",") | Sort-Object
     }
+    $Numbers | Out-String
 }
 
 # Get Username/Address
@@ -27,7 +29,7 @@ $Username | ForEach-Object {
     $Array1 += New-Object PSObject -Property @{
     "Username" = $_;
     "Address" = $Address
-    "Phone" = Get-Authphone
+    "Phone" = Get-Phones
     }
 }
 
