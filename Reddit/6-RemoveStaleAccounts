@@ -8,8 +8,6 @@ https://stackoverflow.com/questions/17829785/delete-files-older-than-15-days-usi
 
 #>
 
-
-
 Function Remove_Accounts{
     $Computers = Get-Content "C:\temp\computers.txt"
     $Array1 = @()
