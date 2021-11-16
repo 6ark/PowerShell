@@ -12,19 +12,21 @@ NOTE1: I probably used the wrong operator, you can find information on operators
 NOTE2: You may need to pipe the results of computers after filtering it again to an updated text file (e.g. "C:\temp\computers_updated.txt")
 
 #>
+
+$Global:Results = "C:\temp\results.csv"
+
 Function Remove_Accounts{
     $Computers = Get-Content "C:\temp\computers.txt"
-    $Array1 = @()
-    $Results = "C:\temp\results.csv"
+    $Array1 = @()    
 
     Foreach ($Computer in $Computers){
         If (Test-Connection $Computer -Count 1){
             #Successful connection
             Function Remove-Old_Accounts{
-            (Get-CimInstance -Computer $Computer  -Class Win32_UserProfile) | Where-Object {$_.LastUseTime -eq (Get-Date).AddDays(-150)} | Remove-CimInstance
+            (Get-CimInstance -ComputerName $Computer  -Class Win32_UserProfile) | Where-Object {$_.LastUseTime -eq (Get-Date).AddDays(-150)} | Remove-CimInstance
             }
 
-            Write-Host -ForegroundColor Green $_
+            Write-Host -ForegroundColor Green "I could connect to $Computer"
             $Array1 += New-Object PsObject -Property @{
                 "Computer" = $Computer;
                 "Connection" = "Success";
@@ -34,12 +36,12 @@ Function Remove_Accounts{
         }
         Else{
             # Unsuccessful connection
-            Write-Host -ForegroundColor Red $_
+            Write-Host -ForegroundColor Red "I could not connect to $Computer"
             $Array1 += New-Object PsObject -Property @{
                 "Computer" =  -Computer $Computer;
-                "Connection" = "Failure";
-                "Accounts" = "Failure";
-                "Removed" = "Failure"
+                "Connection" = Write-Output "Failure";
+                "Accounts" = Write-Output "Failure";
+                "Removed" = Write-Output "Failure"
             }
         } 
 
@@ -48,5 +50,5 @@ Function Remove_Accounts{
 }
 Start-Transcript
 Remove_Accounts
-Start-Process $Results
+Start-Process -FilePath $Results
 Stop-Transcript
