@@ -17,35 +17,22 @@ $Results = "C:\temp\results.csv"
 # Generate new report
 New-Item -ItemType "File" -Path $Results -Force
 
+Function Get-Authphone{
+    For ($j=0; $j -lt (Get-Random -InputObject (1..8)); $j++){
+        (Get-Random -InputObject (111111111..111111333)).ToString()
+    }
+}
+
 # Get Username/Address
 $Username | ForEach-Object {
     $Array1 += New-Object PSObject -Property @{
     "Username" = $_;
     "Address" = $Address
+    "Phone" = Get-Authphone | ForEach-Object {$_}
     }
 }
 
-# Get Authphone
-$Array1 | ForEach-Object {
-    # for each line in array create 1-8 phone numbers then add to array
-    For ($j=0; $j -lt (Get-Random -InputObject (1..8)); $j++){        
-    $Authphonevalue = Get-Random -InputObject (111111111..111111333)
-        $Authphonevalue | ForEach-Object {
-            Switch ($j){
-                1 { $Array1 += New-Object PsObject -Property @{"AuthPhone$($j)" = $Authphonevalue} }
-                2 { $Array1 += New-Object PsObject -Property @{"AuthPhone$($j)" = $Authphonevalue} }
-                3 { $Array1 += New-Object PsObject -Property @{"AuthPhone$($j)" = $Authphonevalue} }
-                4 { $Array1 += New-Object PsObject -Property @{"AuthPhone$($j)" = $Authphonevalue} }
-                5 { $Array1 += New-Object PsObject -Property @{"AuthPhone$($j)" = $Authphonevalue} }
-                6 { $Array1 += New-Object PsObject -Property @{"AuthPhone$($j)" = $Authphonevalue} }
-                7 { $Array1 += New-Object PsObject -Property @{"AuthPhone$($j)" = $Authphonevalue} }
-                8 { $Array1 += New-Object PsObject -Property @{"AuthPhone$($j)" = $Authphonevalue} }
-            }
-        }        
-    }
-}
-
-$Array1 | Select-Object "Username", "Address", "Authphone$j" -ExcludeProperty PSComputerName, RunspaceId, PSShowComputerName | Export-Csv -Path $Results -NoTypeInformation -Force
+$Array1 | Select-Object "Username", "Address", "Phone" -ExcludeProperty PSComputerName, RunspaceId, PSShowComputerName | Export-Csv -Path $Results -NoTypeInformation -Force
 
 #View the contents of array
 $Array1
