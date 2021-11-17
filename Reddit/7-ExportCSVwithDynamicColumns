@@ -2,6 +2,8 @@
 https://www.reddit.com/r/PowerShell/comments/quxq3y/how_do_i_exportcsv_with_dynamic_columns_in_each/
 
 The user requested a method to create columns dynamically - I failed it but this can solve as a successful workaround.
+
+This might be useful for creating dynamic columns; https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/new-object?view=powershell-7.2
 #>
 
 # Create array
