@@ -8,6 +8,9 @@ I have not tested the script because I'm sleepy but later on I'll probably come 
 You can get more properties to filter for each computer by typing; Get-ADComputer -Identity $env:COMPUTERNAME -Properties *
 #>
 $Global:Domain = (Get-ADDomain).DNSRoot
+$Results1 = "C:\temp\results\results1.csv"
+$Results2 = "C:\temp\results\results2.csv"
+$Results3 = "C:\temp\results\results3.csv"
 Function Get-Computers{
     Function Get-MyComputers{
         $Computers1 = @()
@@ -15,8 +18,7 @@ Function Get-Computers{
         "Filter" = "(a -like 'a*')"
         "Properties" = "*"
         }
-        $Results1 = "C:\temp\results\results1.csv"
-
+        
         Get-ADComputer @Filter1 | ForEach-Object {            
             $Computer += New-Object psobject -Property @{
                 "Name" = $($_).Name
@@ -33,8 +35,7 @@ Function Get-Computers{
                 "Filter" = "(b -like 'b*')"
                 "Properties" = "*"
         }
-        $Results2 = "C:\temp\results\results2.csv"
-
+        
         Get-ADComputer @Filter2 | ForEach-Object {            
             $Computer += New-Object psobject -Property @{
                 "Name" = $($_).Name
@@ -53,8 +54,8 @@ Function Get-Computers{
             (b -operator 'b')
         "
         "Properties" = "*"
-    }
-    $Results3 = "C:\temp\results\results3.csv"
+        }
+        
         Get-ADComputer @Filter3 | ForEach-Object {
             $Computer += New-Object psobject -Property @{
                 "Name" = $($_).Name
