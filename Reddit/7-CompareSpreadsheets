@@ -1,0 +1,76 @@
+<#
+This is in response to a reddit user named u/WGU_Scholar1. The post is located here; https://www.reddit.com/r/PowerShell/comments/qwaw8c/using_regex_to_filter_through_ad_objects/
+
+The way I understood his question was that he wanted to create a spreadsheet with his computers, another departments computers, and another spreadsheet containing both. If I work on this some more it can be done without the 3rd spreadsheet and just add spreadsheet1 data with spreadsheet2. The last thing he will need to add is Compare-Object which information can be found here; https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/compare-object?view=powershell-7.2
+
+I have not tested the script because I'm sleepy but later on I'll probably come back and finish this script up.
+
+#>
+Function Get-Computers{
+    Function Get-MyComputers{
+        $Computers1 = @()
+        $Filter1 = @{ 
+        "Filter" = "(a -like 'a*')"
+        "Properties" = "*"
+        }
+        $Results1 = "C:\temp\results\results1.csv"
+
+        Get-ADComputer @Filter1 | ForEach-Object {            
+            $Computer += New-Object psobject -Property @{
+                "Name" = $($_).Name
+                "IPv4" = $($_).IPv4Address
+                "SID" = $($_).SID
+                "Enabled" = $($_).Enabled
+                "LastLogonDate" = $($_).LastLogonDate
+            }
+        } | Select-Object "Name", "IPv4", "SID", "Enabled", "LastLogonDate" -ExcludeProperty PSComputerName, RunspaceId, PSShowComputerName | Sort-Object "Name" | Export-Csv -Path $Results1 -NoTypeInformation -Append
+    }
+    Function Get-TheirComputers{
+        $Computers2 = @()
+        $Filter2 = @{
+                "Filter" = "(b -like 'b*')"
+                "Properties" = "*"
+        }
+        $Results2 = "C:\temp\results\results2.csv"
+
+        Get-ADComputer @Filter2 | ForEach-Object {            
+            $Computer += New-Object psobject -Property @{
+                "Name" = $($_).Name
+                "IPv4" = $($_).IPv4Address
+                "SID" = $($_).SID
+                "Enabled" = $($_).Enabled
+                "LastLogonDate" = $($_).LastLogonDate
+            }
+        } | Select-Object "Name", "IPv4", "SID", "Enabled", "LastLogonDate" -ExcludeProperty PSComputerName, RunspaceId, PSShowComputerName | Sort-Object "Name" | Export-Csv -Path $Results2 -NoTypeInformation -Append
+    }
+    Function Get-OurComputers{
+        $Computers3 = @()
+        $Filter3 = @{ 
+        "Filter" = "
+            (a -operator 'a') -and
+            (b -operator 'b')
+        "
+        "Properties" = "*"
+    }
+    $Results3 = "C:\temp\results\results3.csv"
+        Get-ADComputer @Filter3 | ForEach-Object {
+            $Computer += New-Object psobject -Property @{
+                "Name" = $($_).Name
+                "IPv4" = $($_).IPv4Address
+                "SID" = $($_).SID
+                "Enabled" = $($_).Enabled
+                "LastLogonDate" = $($_).LastLogonDate
+            }
+        } | Select-Object "Name", "IPv4", "SID", "Enabled", "LastLogonDate" -ExcludeProperty PSComputerName, RunspaceId, PSShowComputerName | Sort-Object "Name" | Export-Csv -Path $Results3 -NoTypeInformation -Append
+    }
+
+    Get-MyComputers
+    Get-TheirComputers
+    Get-OurComputers
+}
+    Start-Transcript
+    New-Item -ItemType "File" -Path $Results1, $Results2, $Results3 -Force
+    Write-Host -ForegroundColor Yellow "Computer: $($Domain)"
+    Get-Computers
+    Write-Output "The reports are located here; $($Results1), $($Results2), $($Results3)"
+    Stop-Transcript
