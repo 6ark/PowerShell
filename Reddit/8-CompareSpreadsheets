@@ -5,6 +5,7 @@ The way I understood his question was that he wanted to create a spreadsheet wit
 
 I have not tested the script because I'm sleepy but later on I'll probably come back and finish this script up.
 
+You can get more properties to filter for each computer by typing; Get-ADComputer -Identity $env:COMPUTERNAME -Properties *
 #>
 $Global:Domain = (Get-ADDomain).DNSRoot
 Function Get-Computers{
