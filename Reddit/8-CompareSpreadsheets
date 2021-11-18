@@ -6,6 +6,7 @@ The way I understood his question was that he wanted to create a spreadsheet wit
 I have not tested the script because I'm sleepy but later on I'll probably come back and finish this script up.
 
 #>
+$Global:Domain = (Get-ADDomain).DNSRoot
 Function Get-Computers{
     Function Get-MyComputers{
         $Computers1 = @()
