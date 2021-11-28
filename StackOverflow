@@ -1,0 +1,41 @@
+<#
+HappyBeckmann wanted to recursively identify the files within a directory. Additionally, he wanted to copy files (not including directories) to a different directory and if there were any files with the same name to keep them but modify the name.
+The post is here; https://stackoverflow.com/questions/70109668/do-not-overwrite-existing-files-on-copy/70146933#70146933
+
+Originally, I answered half of his question which was identifying the files within the directory with this;
+
+$Source = "C:\Source"
+(Get-ChildItem -Path $Source -File -Recurse -Force).FullName
+# If you just want the name (Get-ChildItem -Path $Source -File -Recurse -Force).Name
+
+#>
+
+$Source = "C:\Source"
+$Destination = "C:\Destination"
+
+$Source_Content = Get-ChildItem -Path $Source -File -Recurse -Force
+$Destination_Content = Get-ChildItem -Path $Destination -File -Recurse -Force
+
+If ((Test-Path $Source) -and (Test-Path $Destination)){
+    Foreach ($File in $Source_Content){
+        $Date = Get-Date -UFormat "%d %b %Y"
+        $Time = Get-Date -UFormat "%H%M%S"
+        
+        If ($Destination_Content.Name -contains $File.Name){        
+            Write-Output "DUPLICATE: 
+            Source: $($File.FullName)
+            Destination: $Destination\DUPLICATE_$($File.BaseName)_$($Date)_$($Time)_$($File.Extension)"
+            Copy-Item $($File.FullName) -Destination "$Destination\DUPLICATE_$($File.BaseName)_$($Date)_$($Time)_$($File.Extension)"
+        }
+        Else{
+            Copy-Item $($File.FullName) -Destination $Destination -Verbose
+        }
+    }
+}
+Else{
+    New-Item -ItemType "Directory" -Path $Destination -Force -Verbose
+}
+
+Start-Transcript
+Get-ChildItem -Path $Destination -File -Recurse -Force
+Stop-Transcript
