@@ -1,0 +1,14 @@
+<#
+https://stackoverflow.com/users/16939024/bri wanted to identify all logical disks and display the drive letter, volume name, description and disk usage statistics.
+The original post is here;
+
+#>
+
+$DriveInformation = Get-CimInstance -ClassName Win32_LogicalDisk | Select-Object DeviceID, VolumeName, Description, @{'Name' = 'Total Size (GB)'; Expression = {[int]($_.Size/1GB)}}, @{'Name' = 'Used (GB)'; Expression = {[int](($($_.Size)-$($_.FreeSpace))/1GB)}}, @{'Name' = 'Available  (GB)'; Expression = {[int]($_.FreeSpace/1GB)}}
+$DriveInformation
+
+<#
+I informed her that you can export it a .csv with the following lines;
+$DriveInformation | Export-Csv "C:\temp\driveinformation.csv" -NoTypeInformation -Force
+Start-Process "C:\temp\driveinformation.csv"
+#>
