@@ -1,0 +1,30 @@
+<# 
+https://stackoverflow.com/users/10965187/unknownsoldierx stated that he would like to delete the ".jpg" files within the Screenshots directory that do not have a corresponding video file in the Video directory. A corresponding video file would be the name of the screenshot without the ".jpg" extension.
+Original Post: https://stackoverflow.com/questions/70104675/batch-script-returning-unwanted-file-list-results/70149496#70149496
+
+NOTE: The time from $Date wasn't updating when creating transcript resulting in a transcript being created with the same name.
+#>
+
+$Video_Directory = "C:\temp\Video"
+$Screenshot_Directory = "C:\temp\Screenshot"
+
+$Date = Get-Date -UFormat "%d %b %Y %H%M%S"
+
+$Transcript_Directory = "C:\POSH_Transcripts"
+$Transcript = "$Transcript_Directory\Transcript_$($Date)"
+
+New-Item -ItemType "Directory" -Path $Transcript_Directory
+Start-Transcript -Path $Transcript -Append
+Get-ChildItem -Path $Screenshot_Directory -File -Recurse -Include "*.jpg" | ForEach-Object {
+    $Video = $_.Name.Replace(".jpg", "")
+    If (Test-Path "$Video_Directory\$Video"){
+        Write-Host -ForegroundColor Green "The video ($($_.Name.Replace(`".jpg`", `"`"))) for the screenshot ($($_.Name)) exists."
+    }
+    Else{
+        Write-Host -ForegroundColor Red "The video for screenshot $($_.Name) does not exist. Removing screenshot."
+        Remove-Item $_.FullName -Force -Verbose
+        Write-Host -ForegroundColor Green "$($_.Name) has been removed"
+    }
+}
+Stop-Transcript
+Start-Process notepad.exe $Transcript
