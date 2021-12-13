@@ -1,0 +1,12 @@
+<#
+HD_kech_2013 messaged me requesting a script that would copy files with an extension of .test, .txt, and .doc within a folder and its subfolders to a different directory.
+
+The attempt he made was
+Copy-Item -Path "C:\Users\<username>\Documents\testscript" -Filter "*.test" -destination "C:\Users\<username>\Desktop\EDF" -Recurse -Force
+and
+Copy-Item -Path "C:\Users\<username>\Documents\testscript" -Filter "*.txt","*.doc" -destination "C:\Users\<username>\Desktop\EDF" -Recurse -Force -PassThru
+
+I gave him the following script but warned him that if he believes the files will have the same name and extension that he will have to modify it because it will forcefully overwrite in the destination folder.
+#>
+
+(Get-ChildItem -Path $Source -Include "*.test", "*.txt", "*.doc" -Recurse -Force).FullName | Copy-Item -Destination $Destination -Verbose -Force
