@@ -1,0 +1,54 @@
+Function Select-Directory{
+    # Open browser dialog.
+    Add-Type -AssemblyName System.Windows.Forms
+    $Browser = New-Object System.Windows.Forms.FolderBrowserDialog
+    $Browser.Description = "Select a folder."
+    $FolderBrowser = $Browser.ShowDialog((New-Object System.Windows.Forms.Form -Property @{TopMost = $True}))
+        
+    # If path exists do update value of alias otherwise provide additional options.
+    If($Browser.SelectedPath){
+        $Directory = $Browser.SelectedPath
+        Write-Host -ForegroundColor Yellow "The directory that you selected is:"
+        Write-Host -ForegroundColor Cyan "$($Directory)"
+        Write-Host -ForegroundColor Yellow "Retrieving extensions..."
+        Get-Extensions | Sort-Object | Add-Content -Path $Result
+    }
+    Else{
+        $Directory = $Null
+
+        Write-Host -ForegroundColor Red "You have not selected a directory." 
+        While($Directory -eq $Null){ 
+            $Directory = Read-Host "What would you like to do?`n(1) Retry`n(2) Paste directory`n(3) Abort?`n`nResponse"
+                         
+            Switch ($Directory){
+                {($_ -eq 1) -or ($_ -like "R")} {
+                    Select-Directory
+                    Break
+                }
+                {($_ -eq 2) -or ($_ -like "P")} {
+                    $Directory = Read-Host "What is the full path of the directory?"
+                    
+                    If (($Directory -ne "") -and (Test-Path $Directory)){
+                        Write-Host -ForegroundColor Yellow "The directory that you selected is:"
+                        Write-Host -ForegroundColor Cyan "$($Directory.ToUpper())"
+                        Write-Host -ForegroundColor Yellow "Retrieving extensions..."
+                        Get-Extensions | Sort-Object | Add-Content -Path $Result
+                        Break
+                    }
+                    Else{
+                        $Directory = $Null
+                    }
+                }
+                {($_ -eq 3) -or ($_ -like "A")} {
+                    Write-Host -ForegroundColor Green "You have successfully aborted script."
+                    Break
+                }
+                default {
+                    Write-Host -ForegroundColor Red "You have not selected a directory."
+                    $Directory = $Null
+                    Break
+                }
+            }
+        }
+    }
+}
