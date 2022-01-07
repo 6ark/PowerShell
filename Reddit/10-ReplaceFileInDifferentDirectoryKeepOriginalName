@@ -14,6 +14,8 @@ How to setup a similar environment:
 
 You can press play with the current setup and it won't make any actual changes because the cmdlets that will actually change things are commented out. (e.g. #copy-item...)
 #>
+
+<# OLD - Scroll down for the new working script. I handled it a little differently.
 $Tree_Path = "C:\temp5\Tree"
 $Tree = Get-ChildItem -Path $Tree_Path -Directory | Where-Object {$_.Name -ne "Uncle"}
 
@@ -80,3 +82,38 @@ $Tree | ForEach-Object {
     #Copy-Item -Path $($Family.Child_Image_New.FullName) -Destination $($Family.Child_Image_Old.FullName) -Verbose
     #Copy-Item -Path $($Family.Grandchild_Image_New.FullName) -Destination $($Family.Grandchild_Image_Old.FullName) -Verbose    
 }
+
+#>
+
+<# NEW - This works
+$IMG1 = Get-ChildItem -Path "C:\temp5\tree\*\*\img1.png" -Force
+$IMG2 = Get-ChildItem -Path "C:\temp5\Tree\*\*\*\img2.png" -Force
+$Uncle = Get-ChildItem -Path "C:\temp5\tree\uncle" -Force
+
+Foreach ($IMG in $IMG1){
+    $IMG.Directory | ForEach-Object {    
+        Write-Host "
+            Parent: $($IMG.Directory.Name)
+            Parent: $($IMG.DirectoryName)
+            Child: $($IMG.Name)
+            ChildPath: $($IMG.FullName)
+            Uncle: $($Uncle | Where-Object {$_.BaseName -eq $($IMG.Directory.Name)} | Select-Object -ExpandProperty FullName)
+        "
+        Write-Host "This is now replacing [$($IMG.FullName)] with [$($Uncle | Where-Object {$_.BaseName -eq $($IMG.Directory.Name)} | Select-Object -ExpandProperty FullName)]. We will keep the original name: [$($IMG.Name)]"
+        Copy-Item -Path $($Uncle | Where-Object {$_.BaseName -eq $($IMG.Directory.Name)} | Select-Object -ExpandProperty FullName) -Destination $($IMG.FullName) -Verbose -Force
+    }
+}
+Foreach ($IMG in $IMG2){
+    $IMG.Directory | ForEach-Object {    
+        Write-Host "
+            Parent: $($IMG.Directory.Name)
+            Parent: $($IMG.DirectoryName)
+            Child: $($IMG.Name)
+            ChildPath: $($IMG.FullName)
+            Uncle: $($Uncle | Where-Object {$_.BaseName -eq $($IMG.Directory.Name)} | Select-Object -ExpandProperty FullName)
+        "
+        Write-Host "This is now replacing [$($IMG.FullName)] with [$($Uncle | Where-Object {$_.BaseName -eq $($IMG.Directory.Name)} | Select-Object -ExpandProperty FullName)]. We will keep the original name: [$($IMG.Name)]"
+        Copy-Item -Path $($Uncle | Where-Object {$_.BaseName -eq $($IMG.Directory.Name)} | Select-Object -ExpandProperty FullName) -Destination $($IMG.FullName) -Verbose -Force
+    }
+}
+#>
