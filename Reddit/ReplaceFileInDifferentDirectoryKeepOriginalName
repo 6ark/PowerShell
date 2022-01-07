@@ -1,0 +1,82 @@
+<#
+https://www.reddit.com/user/Acceptable_Donkey262 messaged me requesting a script that would replace a file from two directories with an image from a different directory that is named the parent folder of the aforementioned images. The two images are named differently.
+
+I'm not sure if it is officially a bad practice, but I referred to values within the object to create new values. I've messed with it a bunch but can't get it to consistently pull the correct information when involved with multiple directories. I will pursue this later when I have more time.
+
+The issue is that I'm getting the wrong CIO and CIO Path, this ends up messing up the CIN and CIN Path.
+
+When the script is finished I'll probably remove the write-host -foregroundcolor green section and fix the items in the child/grandchild write-hosts below.
+
+How to setup a similar environment:
+1. Create "C:\temp5\tree", "C:\temp5\tree\Parent1", "C:\temp5\tree\Parent1\Child1", "C:\temp5\tree\Parent1\Child1\img1.png", "C:\temp5\tree\Parent1\Child1\Grandchild1"
+"C:\temp5\tree\Parent1\Child1\Grandchild1\img2.png", "C:\temp5\tree\Parent2", "C:\temp5\tree\Parent2\Child2", "C:\temp5\tree\Parent2\Child2\img1.png", "C:\temp5\tree\Parent2\Child2\Grandchild2"
+"C:\temp5\tree\Parent2\Child2\Grandchild2\img2.png", "C:\temp5\tree\Uncle", "C:\temp5\tree\Uncle\Child1.png", "C:\temp5\tree\Uncle\Child2.png", "C:\temp5\tree\Uncle\Grandchild1.png", "C:\temp5\tree\Uncle\Grandchild2.png"
+
+You can press play with the current setup and it won't make any actual changes because the cmdlets that will actually change things are commented out. (e.g. #copy-item...)
+#>
+$Tree_Path = "C:\temp5\Tree"
+$Tree = Get-ChildItem -Path $Tree_Path -Directory | Where-Object {$_.Name -ne "Uncle"}
+
+$Tree | ForEach-Object {
+    
+    $IMG1 = "IMG1.png"
+    $IMG2 = "IMG2.png"
+    
+    $Child = Get-ChildItem -Path $_.FullName
+    $Grandchild = Get-ChildItem -Path $($Family.Child).FullName
+    $Uncle = Get-ChildItem -Path "$Tree_Path\Uncle"
+        
+    $Family = [PSCustomObject]@{
+        Parent = $_
+                
+        Child = $Child | Where-Object {($_.Name -like "Child*") -and ($_.PSIsContainer -eq "True")}
+        Child_Image_Old = Get-ChildItem -Path $($Family.Child.FullName) -File -Filter $IMG1
+        Child_Image_New = $Uncle | Where-Object {$_.BaseName -eq $Family.Child.Name}
+
+        Grandchild = $($Grandchild | Where-Object {($_.Name -like "Grandchild*") -and ($_.PSISContainer -eq "True")})
+        Grandchild_Image_Old = Get-ChildItem -Path $($Family.Grandchild.FullName) -File -Filter $IMG2
+        Grandchild_Image_New = $Uncle | Where-Object {($_.BaseName -eq $Family.Grandchild.Name)}
+    }
+    
+
+    Write-Host -ForegroundColor Green "
+    --------------------------------------------
+    
+    P: $($Family.Parent.Name)
+    Path: $($Family.Parent.FullName)
+    
+    C: $($Family.Child.Name)
+    Path: $($Family.Child.FullName)
+    
+    CIO: $($Family.Child_Image_Old.Name)
+    Path: $($Family.Child_Image_Old.FullName)
+    
+    CIN: $($Family.Child_Image_New.Name)
+    Path: $($Family.Child_Image_New.FullName)
+        
+    GC: $($Family.Grandchild.Name)
+    Path: $($Family.Grandchild.FullName)
+    
+    GCIO: $($Family.Grandchild_Image_Old.Name)
+    Path: $($Family.Grandchild_Image_Old.FullName)
+    
+    GCIN: $($Family.Grandchild_Image_New.Name)
+    Path: $($Family.Grandchild_Image_New.FullName)
+    "
+
+    <#
+    Write-Host -BackgroundColor Gray -ForegroundColor Red "Directory: [$($Family.Parent.FullName)]"
+    
+    # Child
+    Write-Host -BackgroundColor Gray -ForegroundColor White "The child of [$($Family.Parent.Name)] is [$($Family.Child.Name)] and this contains an image located here: [$($Family.Child_Image_Old.FullName)]."
+    Write-Host -ForegroundColor Yellow "This is now replacing [$($Family.Child_Image_Old.FullName)] with [$($Family.Child_Image_New.FullName)]. We will also keep the original name: [$($Family.Child_Image_Old.Name)]"
+    
+    # Grandchild
+    Write-Host -BackgroundColor Gray -ForegroundColor Blue "The child of [$($Family.Child.Name)] is [$($Family.Grandchild.Name)] and this contains an image located here: [$($Family.Grandchild_Image_Old.FullName)]."
+    Write-Host -ForegroundColor Yellow "This is now replacing [$($Family.Grandchild_Image_Old.FullName)] with [$($Family.Grandchild_Image_New.FullName)]. We will also keep the original name: [$($Family.Grandchild_Image_Old.Name)]"
+    #>
+
+    # Action
+    #Copy-Item -Path $($Family.Child_Image_New.FullName) -Destination $($Family.Child_Image_Old.FullName) -Verbose
+    #Copy-Item -Path $($Family.Grandchild_Image_New.FullName) -Destination $($Family.Grandchild_Image_Old.FullName) -Verbose    
+}
