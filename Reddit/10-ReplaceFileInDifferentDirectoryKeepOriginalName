@@ -86,6 +86,25 @@ $Tree | ForEach-Object {
 #>
 
 <# NEW - This works
+<#
+C:\temp5\Tree
+C:\temp5\Tree\Parent1
+C:\temp5\Tree\Parent1\Child1
+C:\temp5\Tree\Parent1\Child1\Grandchild1
+C:\temp5\Tree\Parent1\Child1\Grandchild1\img2.png
+C:\temp5\Tree\Parent1\Child1\img1.png
+C:\temp5\Tree\Parent2
+C:\temp5\Tree\Parent2\Child2
+C:\temp5\Tree\Parent2\Child2\Grandchild2
+C:\temp5\Tree\Parent2\Child2\Grandchild2\img2.png
+C:\temp5\Tree\Parent2\Child2\img1.png
+C:\temp5\Tree\Uncle
+C:\temp5\Tree\Uncle\Child1.png
+C:\temp5\Tree\Uncle\Child2.png
+C:\temp5\Tree\Uncle\Grandchild1.png
+C:\temp5\Tree\Uncle\Grandchild2.png
+#>
+
 $IMG1 = Get-ChildItem -Path "C:\temp5\tree\*\*\img1.png" -Force
 $IMG2 = Get-ChildItem -Path "C:\temp5\Tree\*\*\*\img2.png" -Force
 $Uncle = Get-ChildItem -Path "C:\temp5\tree\uncle" -Force
