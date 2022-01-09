@@ -1,0 +1,52 @@
+<#
+A user named u/XNomanX requested assistance with installing .NET Framework 3.5. He says that he followed a guide on YouTube that made things worse. He wanted to know how to undo the changes.
+
+He updated his post later on with a link to the guide (https://www.youtube.com/watch?v=LX-IrVIapQE&t=208s) that he was following... He was using the exact script that the video was using - which means the source was set to a user profile that didn't exist. This means he did not make any changes. 
+
+I informed him that I believe the the install was making changes to "Turn Windows features on or off" so if he still believes the script did something he can try to remove that feature by unchecking the box.
+
+The script he was using: 
+"Dism /online /enable-feature /featurename:NetFX3 /All /Source:C:\ValiumMedia\ /LimitAccess"
+
+I informed him the Microsoft page that lists all of the DISM parameters so that he understands what he is trying to do: https://docs.microsoft.com/en-us/windows-hardware/manufacture/desktop/what-is-dism?view=windows-11
+
+Additionally, he could run an administrative command prompt to identify the description for each parameter:
+I broke down the parameters for him;
+dism /?
+  /online - targets the running operating system.
+dism /online /enable-feature /?
+  /enable-feature /featurename:<name in image> [/packagename:<name_in_Image>][/source:<source>][/limitaccess][/all]
+  /limitaccess -prevents DISM from contacting WU/WSUS.
+  /all - enable all parent features of the specified feature.
+
+I gave him a link to instructions on identifying what versions of .NET were installed (https://docs.microsoft.com/en-us/dotnet/framework/migration-guide/how-to-determine-which-versions-are-installed) 
+Additionally, I wrote a script (below) to get the information.
+
+I also gave him the download location from Microsoft for .NET 3.5 (https://docs.microsoft.com/en-us/dotnet/framework/install/dotnet-35-windows).
+
+I informed him that if he downloads 3rd party files he is risking his computer health, security, and privacy and that if he continues regardless then he should at least create a restore point.
+#>
+
+$NET_Frameworkx86 = [System.Collections.ArrayList]@("HKLM:Software\Wow6432Node\Microsoft\.NETFramework\Policy\v1.0\3705","HKLM:Software\Wow6432Node\Microsoft\NET Framework Setup\NDP\v1.1.4322","HKLM:Software\Wow6432Node\Microsoft\NET Framework Setup\NDP\v2.0.50727","HKLM:Software\Wow6432Node\Microsoft\NET Framework Setup\NDP\v3.0\Setup","HKLM:Software\Wow6432Node\Microsoft\NET Framework Setup\NDP\v3.5","HKLM:Software\Wow6432Node\Microsoft\NET Framework Setup\NDP\v4\Client","HKLM:Software\Wow6432Node\Microsoft\NET Framework Setup\NDP\v4\Full")
+$NET_Frameworkx64 = [System.Collections.ArrayList]@("HKLM:Software\Microsoft\.NETFramework\Policy\v1.0\3705","HKLM:Software\Microsoft\NET Framework Setup\NDP\v1.1.4322","HKLM:Software\Microsoft\NET Framework Setup\NDP\v2.0.50727","HKLM:Software\Microsoft\NET Framework Setup\NDP\v3.0\Setup","HKLM:Software\Microsoft\NET Framework Setup\NDP\v3.5","HKLM:Software\Microsoft\NET Framework Setup\NDP\v4\Client","HKLM:Software\Microsoft\NET Framework Setup\NDP\v4\Full")
+
+Foreach ($Framework in $NET_Frameworkx64){
+    $Information = Get-ItemProperty $Framework -ErrorAction SilentlyContinue
+    
+    If(($Information.Install -eq "1") -or ($Information.InstallSuccess -eq "1")){
+        Write-Host -ForegroundColor Green "x64 $Framework is installed with [v$($Information.Version)]."
+    }    
+    Else{
+        Write-Host -ForegroundColor Red "x64 $Framework is not installed."
+    }
+}
+Foreach ($Framework in $NET_Frameworkx86){
+    $Information = Get-ItemProperty $Framework -ErrorAction SilentlyContinue
+    
+    If(($Information.Install -eq "1") -or ($Information.InstallSuccess -eq "1")){
+        Write-Host -ForegroundColor Green "x86 $Framework is installed with [v$($Information.Version)]."
+    }    
+    Else{
+        Write-Host -ForegroundColor Red "x86 $Framework is not installed."
+    }
+}
