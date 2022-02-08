@@ -1,0 +1,37 @@
+<#
+.DESCRIPTION
+  https://www.reddit.com/r/scripting/comments/rxjg5b/help_with_simple_script_to_read_contents_of/
+  
+  If I understood you correctly you are trying to import a spreadsheet where each row in column A is a directory path, create the directory if it doesn't exist and write all hidden files to a different spreadsheet.
+#>
+
+$CSV = "C:\TEMP10\Book1.csv"
+$Import = Import-Csv -Path $CSV -Delimiter ","
+$Export = "C:\TEMP10\Book2.csv"
+
+Foreach ($Row in $Import){
+    Function Get-Hidden{
+        $Files = Get-ChildItem -Path $Row.Directory -Hidden -Force | Select-Object -ExpandProperty FullName
+
+        Foreach($File in $Files){
+            $Row.Files += "$File`n"
+        }
+    }
+
+    Add-Member -InputObject $Row -MemberType NoteProperty -Name "Files" -Value $Null
+    
+    If ((Test-Path -Path $Row.Directory) -eq $True){
+        Write-Host -ForegroundColor Green "[$($Row.Directory)]"
+        Get-Hidden
+    }
+    Else{
+        Write-Host -ForegroundColor Red "[$($Row.Directory)]"
+        New-Item -ItemType "Directory" -Path $Row.Directory -Force -ErrorAction Stop | Out-Null   
+        $ABC = New-Item -ItemType "File" -Path $Row.Directory -Name Hidden.txt
+        $ABC.Attributes = "Hidden"
+        Get-Hidden
+    }
+}
+
+$Import | Export-Csv -Path $Export -NoTypeInformation -Force
+Start-Process -FilePath $Export
